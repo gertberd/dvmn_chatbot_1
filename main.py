@@ -22,7 +22,7 @@ def main():
     }
     while True:
         try:
-            response = requests.get(api_url, headers=headers, params=params, timeout=190)
+            response = requests.get(api_url, headers=headers, params=params, timeout=90)
             response.raise_for_status()
             response_data = response.json()
             if response_data['status'] == 'found':
