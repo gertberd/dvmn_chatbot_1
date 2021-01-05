@@ -40,9 +40,8 @@ def main():
                     bot.send_message(chat_id=chat_id, text=message, parse_mode="Markdown")
             else:
                 params['timestamp'] = response_data['timestamp_to_request']
-        except requests.exceptions.ReadTimeout as error:
-            print('Истёк таймаут: ')
-            print(error)
+        except requests.exceptions.ReadTimeout:
+            continue
         except requests.exceptions.ConnectionError as error:
             print('Ошибка соединения:')
             print(error)
