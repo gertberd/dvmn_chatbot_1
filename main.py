@@ -9,9 +9,9 @@ def main():
     load_dotenv()
     api_url = 'https://dvmn.org/api/long_polling/'
     dvmn_url = 'https://dvmn.org'
-    dvmn_api_token = os.getenv("DVMN_API_TOKEN")
-    bot_token = os.getenv("TG_BOT_TOKEN")
-    chat_id = os.getenv("TG_CHAT_ID")
+    dvmn_api_token = os.getenv('DVMN_API_TOKEN')
+    bot_token = os.getenv('TG_BOT_TOKEN')
+    chat_id = os.getenv('TG_CHAT_ID')
     bot = Bot(token=bot_token)
     timestamp = time.time()
     headers = {
@@ -30,12 +30,12 @@ def main():
                 for attempt in response_data['new_attempts']:
                     attempt_result = attempt['is_negative']
                     lesson_title = attempt['lesson_title']
-                    lesson_url = dvmn_url + attempt['lesson_url']
+                    lesson_url = f'{dvmn_url}{attempt["lesson_url"]}'
                     message_header = f'У вас проверили работу ["{lesson_title}"]({lesson_url})'
                     if attempt_result:
-                        message = message_header + '\n\nК сожалению, в работе нашлись ошибки.'
+                        message = f'{message_header}\n\nК сожалению, в работе нашлись ошибки.'
                     else:
-                        message = message_header + '\n\nПреподавателю всё понравилось, \
+                        message = f'{message_header}\n\nПреподавателю всё понравилось, \
                         можно приступать к следующему уроку!'
                     bot.send_message(chat_id=chat_id, text=message, parse_mode="Markdown")
             else:
