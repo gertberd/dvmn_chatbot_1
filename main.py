@@ -10,8 +10,8 @@ def main():
     api_url = 'https://dvmn.org/api/long_polling/'
     dvmn_url = 'https://dvmn.org'
     dvmn_api_token = os.getenv("DVMN_API_TOKEN")
-    bot_token = os.getenv("BOT_TOKEN")
-    chat_id = os.getenv("CHAT_ID")
+    bot_token = os.getenv("TG_BOT_TOKEN")
+    chat_id = os.getenv("TG_CHAT_ID")
     bot = Bot(token=bot_token)
     timestamp = time.time()
     headers = {
