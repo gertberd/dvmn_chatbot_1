@@ -35,9 +35,14 @@ def main():
                     if attempt_result:
                         message = f'{message_header}\n\nК сожалению, в работе нашлись ошибки.'
                     else:
-                        message = f'{message_header}\n\nПреподавателю всё понравилось, \
-                        можно приступать к следующему уроку!'
-                    bot.send_message(chat_id=chat_id, text=message, parse_mode="Markdown")
+                        message = f'{message_header}\n\nПреподавателю всё понравилось, ' \
+                                  'можно приступать к следующему уроку!'
+                    bot.send_message(
+                        chat_id=chat_id,
+                        text=message,
+                        parse_mode="Markdown",
+                        disable_web_page_preview=True
+                    )
             else:
                 params['timestamp'] = response_data['timestamp_to_request']
         except requests.exceptions.ReadTimeout:
