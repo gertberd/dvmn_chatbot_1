@@ -24,10 +24,10 @@ def main():
         try:
             response = requests.get(api_url, headers=headers, params=params, timeout=190)
             response.raise_for_status()
-            response_json = response.json()
-            if response_json['status'] == 'found':
-                params['timestamp'] = response_json['last_attempt_timestamp']
-                for attempt in response_json['new_attempts']:
+            response_data = response.json()
+            if response_data['status'] == 'found':
+                params['timestamp'] = response_data['last_attempt_timestamp']
+                for attempt in response_data['new_attempts']:
                     attempt_result = attempt['is_negative']
                     lesson_title = attempt['lesson_title']
                     lesson_url = dvmn_url + attempt['lesson_url']
@@ -39,7 +39,7 @@ def main():
                         можно приступать к следующему уроку!'
                     bot.send_message(chat_id=chat_id, text=message, parse_mode="Markdown")
             else:
-                params['timestamp'] = response_json['timestamp_to_request']
+                params['timestamp'] = response_data['timestamp_to_request']
         except requests.exceptions.ReadTimeout as error:
             print('Истёк таймаут: ')
             print(error)
