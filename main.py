@@ -1,11 +1,14 @@
 import os
 import time
+import logging
+
 import requests
 from dotenv import load_dotenv
 from telegram import Bot
 
 
 def main():
+    logging.warning("Бот запущен")
     load_dotenv()
     api_url = 'https://dvmn.org/api/long_polling/'
     dvmn_url = 'https://dvmn.org'
