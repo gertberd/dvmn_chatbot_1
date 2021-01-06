@@ -1,21 +1,39 @@
 import os
 import time
-import logging
+from logging import Handler, LogRecord, getLogger
 
 import requests
 from dotenv import load_dotenv
 from telegram import Bot
 
 
+class TelegramBotHandler(Handler):
+    def __init__(self, chat_id: str, bot: Bot):
+        super().__init__()
+        self.chat_id = chat_id
+        self.bot = bot
+
+    def emit(self, record: LogRecord):
+        self.bot.send_message(
+            self.chat_id,
+            self.format(record)
+        )
+        print(record.message)
+
+
 def main():
-    logging.warning("Бот запущен")
     load_dotenv()
     api_url = 'https://dvmn.org/api/long_polling/'
     dvmn_url = 'https://dvmn.org'
     dvmn_api_token = os.getenv('DVMN_API_TOKEN')
     bot_token = os.getenv('TG_BOT_TOKEN')
     chat_id = os.getenv('TG_CHAT_ID')
+    log_level = os.getenv('LOG_LEVEL')
     bot = Bot(token=bot_token)
+    logger = getLogger(__name__)
+    logger.addHandler(TelegramBotHandler(chat_id, bot))
+    logger.setLevel(log_level)
+    logger.info("Starting bot...")
     timestamp = time.time()
     headers = {
         'Authorization': f'Token {dvmn_api_token}'
@@ -51,12 +69,11 @@ def main():
         except requests.exceptions.ReadTimeout:
             continue
         except requests.exceptions.ConnectionError as error:
-            print('Ошибка соединения:')
-            print(error)
+            logger.debug("Connection error, sleep 30 seconds...")
             time.sleep(30)
-        except requests.exceptions.HTTPError as error:
-            print(error)
-            break
+        except Exception:
+            logger.critical(f'Bot failed! Sleep 30 minutes...', exc_info=True)
+            time.sleep(1800)
 
 
 if __name__ == '__main__':
