@@ -1,6 +1,6 @@
 import os
 import time
-from logging import Handler, LogRecord, getLogger
+from logging import Handler, LogRecord, getLogger, Formatter
 
 import requests
 from dotenv import load_dotenv
@@ -12,13 +12,14 @@ class TelegramBotHandler(Handler):
         super().__init__()
         self.chat_id = chat_id
         self.bot = bot
+        self.formatter = Formatter(fmt='[%(asctime)s: %(levelname)s] %(message)s')
 
     def emit(self, record: LogRecord):
         self.bot.send_message(
             self.chat_id,
             self.format(record)
         )
-        print(record.message)
+        print(record)
 
 
 def main():
