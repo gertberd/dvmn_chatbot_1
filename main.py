@@ -1,25 +1,32 @@
 import os
 import time
-from logging import Handler, LogRecord, getLogger, Formatter
+from logging import Handler, LogRecord, getLogger
 
 import requests
 from dotenv import load_dotenv
-from telegram import Bot
+from telegram import Bot, TelegramError
 
 
-class TelegramBotHandler(Handler):
+class TelegramLogHandler(Handler):
     def __init__(self, chat_id: str, bot: Bot):
         super().__init__()
         self.chat_id = chat_id
         self.bot = bot
-        self.formatter = Formatter(fmt='[%(asctime)s: %(levelname)s] %(message)s')
 
     def emit(self, record: LogRecord):
         self.bot.send_message(
             self.chat_id,
             self.format(record)
         )
-        print(record)
+
+
+def check_attempt(attempt, dvmn_url) -> str:
+    lesson_title = attempt['lesson_title']
+    lesson_url = f'{dvmn_url}{attempt["lesson_url"]}'
+    message_header = f'У вас проверили работу ["{lesson_title}"]({lesson_url})'
+    if attempt['is_negative']:
+        return f'{message_header}\n\nК сожалению, в работе нашлись ошибки.'
+    return f'{message_header}\n\nПреподавателю всё понравилось, можно приступать к следующему уроку!'
 
 
 def main():
@@ -32,9 +39,9 @@ def main():
     log_level = os.getenv('LOG_LEVEL')
     bot = Bot(token=bot_token)
     logger = getLogger(__name__)
-    logger.addHandler(TelegramBotHandler(chat_id, bot))
+    logger.addHandler(TelegramLogHandler(chat_id, bot))
     logger.setLevel(log_level)
-    logger.info("Starting bot...")
+    logger.info("Бот запущен...")
     timestamp = time.time()
     headers = {
         'Authorization': f'Token {dvmn_api_token}'
@@ -50,15 +57,7 @@ def main():
             if response_data['status'] == 'found':
                 params['timestamp'] = response_data['last_attempt_timestamp']
                 for attempt in response_data['new_attempts']:
-                    attempt_result = attempt['is_negative']
-                    lesson_title = attempt['lesson_title']
-                    lesson_url = f'{dvmn_url}{attempt["lesson_url"]}'
-                    message_header = f'У вас проверили работу ["{lesson_title}"]({lesson_url})'
-                    if attempt_result:
-                        message = f'{message_header}\n\nК сожалению, в работе нашлись ошибки.'
-                    else:
-                        message = f'{message_header}\n\nПреподавателю всё понравилось, ' \
-                                  'можно приступать к следующему уроку!'
+                    message = check_attempt(attempt, dvmn_url)
                     bot.send_message(
                         chat_id=chat_id,
                         text=message,
@@ -67,14 +66,11 @@ def main():
                     )
             else:
                 params['timestamp'] = response_data['timestamp_to_request']
-        except requests.exceptions.ReadTimeout:
+        except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError):
             continue
-        except requests.exceptions.ConnectionError as error:
-            logger.debug("Connection error, sleep 30 seconds...")
-            time.sleep(30)
-        except Exception:
-            logger.critical(f'Bot failed! Sleep 30 minutes...', exc_info=True)
-            time.sleep(1800)
+        except TelegramError as error:
+            logger.exception(f'Бот упал с ошибкой: ')
+            logger.exception(error, exc_info=True)
 
 
 if __name__ == '__main__':
