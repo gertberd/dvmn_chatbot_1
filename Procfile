@@ -1,1 +1,1 @@
-bot: python3 main.py
+bot: python3 dvmn_reviews_bot.py
