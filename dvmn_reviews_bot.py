@@ -4,10 +4,12 @@ from logging import Handler, LogRecord, getLogger
 
 import requests
 from dotenv import load_dotenv
-from telegram import Bot, TelegramError
+from telegram import Bot
+
+logger = getLogger(__name__)
 
 
-class TelegramLogHandler(Handler):
+class TelegramLogsHandler(Handler):
     def __init__(self, chat_id: str, token: str):
         super().__init__()
         self.chat_id = chat_id
@@ -37,19 +39,24 @@ def main():
     bot_token = os.getenv('TG_BOT_TOKEN')
     logging_bot_token = os.getenv('TG_LOGGING_BOT_TOKEN')
     chat_id = os.getenv('TG_CHAT_ID')
-    log_level = os.getenv('LOG_LEVEL')
+    log_level = os.getenv('LOG_LEVEL', default='INFO')
+    max_connection_errors = int(os.getenv("MAX_CONNECTION_ERRORS", default=5))
+    connection_delay = int(os.getenv("CONNECTION_DELAY", default=300))
     bot = Bot(token=bot_token)
-    logger = getLogger(__name__)
-    logger.addHandler(TelegramLogHandler(chat_id, logging_bot_token))
+    logger.addHandler(TelegramLogsHandler(chat_id, logging_bot_token))
     logger.setLevel(log_level)
     logger.info("Бот запущен...")
-    timestamp = time.time()
+
     headers = {
         'Authorization': f'Token {dvmn_api_token}'
     }
+    timestamp = time.time()
     params = {
         'timestamp': timestamp
     }
+
+    connection_error_counter = 0
+
     while True:
         try:
             response = requests.get(api_url, headers=headers, params=params, timeout=90)
@@ -67,11 +74,14 @@ def main():
                     )
             else:
                 params['timestamp'] = response_data['timestamp_to_request']
-        except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError):
-            continue
-        except TelegramError as error:
-            logger.exception(f'Бот упал с ошибкой: ')
-            logger.exception(error, exc_info=True)
+        except requests.exceptions.ReadTimeout as error:
+            logger.debug(error)
+        except requests.exceptions.ConnectionError as error:
+            logger.info(error)
+            connection_error_counter += 1
+            if connection_error_counter >= max_connection_errors:
+                connection_error_counter = 0
+                time.sleep(connection_delay)
 
 
 if __name__ == '__main__':
