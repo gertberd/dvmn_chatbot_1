@@ -8,10 +8,10 @@ from telegram import Bot, TelegramError
 
 
 class TelegramLogHandler(Handler):
-    def __init__(self, chat_id: str, bot: Bot):
+    def __init__(self, chat_id: str, token: str):
         super().__init__()
         self.chat_id = chat_id
-        self.bot = bot
+        self.bot = Bot(token=token)
 
     def emit(self, record: LogRecord):
         self.bot.send_message(
@@ -35,11 +35,12 @@ def main():
     dvmn_url = 'https://dvmn.org'
     dvmn_api_token = os.getenv('DVMN_API_TOKEN')
     bot_token = os.getenv('TG_BOT_TOKEN')
+    logging_bot_token = os.getenv('TG_LOGGING_BOT_TOKEN')
     chat_id = os.getenv('TG_CHAT_ID')
     log_level = os.getenv('LOG_LEVEL')
     bot = Bot(token=bot_token)
     logger = getLogger(__name__)
-    logger.addHandler(TelegramLogHandler(chat_id, bot))
+    logger.addHandler(TelegramLogHandler(chat_id, logging_bot_token))
     logger.setLevel(log_level)
     logger.info("Бот запущен...")
     timestamp = time.time()
