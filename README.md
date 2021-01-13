@@ -12,7 +12,7 @@
 DVMN_API_TOKEN=<токен API dvmn.org>
 TG_BOT_TOKEN=<токен основного бота>
 TG_LOGGING_BOT_TOKEN=<токен бота-логгера>
-CHAT_ID=<id чата>
+TG_CHAT_ID=<id чата>
 ```
 Python3 должен быть уже установлен. 
 Затем используйте `pip` (или `pip3`, есть есть конфликт с Python2) для установки зависимостей:
